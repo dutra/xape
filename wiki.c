@@ -18,8 +18,8 @@ static int fd_wiki;
 
 int wiki(char *key, char *stringr) {
 	FILE *socket_fr_wiki = 0;
-	char socket_buffer_wiki[262144], error[128], temp[4096];
-	int i;
+	char socket_buffer_wiki[52000], error[128], temp[4096];
+	int i, received=0;
 	struct sockaddr_in addr_wiki;
 	struct hostent *host_wiki;
 	host_wiki = gethostbyname("wikipedia.org");
@@ -54,15 +54,23 @@ int wiki(char *key, char *stringr) {
 	fflush(socket_fp_wiki);
 
 	printf("%s\n", key);
-	memset(socket_buffer_wiki, 0, 262144);
+	memset(socket_buffer_wiki, 0, 52000);
+
 	while(fgets(temp, 4096, socket_fr_wiki)) {
-		fflush(socket_fp_wiki);
-		strcat(socket_buffer_wiki, temp);
-		memset(temp, 0, 4096);
+	  printf("%s\n",temp);
+	  fflush(socket_fp_wiki);
+	  if(received>=52001-4096)
+	    break;
+	  strcat(socket_buffer_wiki, temp);
+	  received+=strlen(temp);
+	  memset(temp, 0, 4096);
+
+
 	}
+
 	fprintf(socket_fp_wiki, "Connection: close\n");
 	fflush(socket_fp_wiki);
-  fclose(socket_fr_wiki);
+	fclose(socket_fr_wiki);
 	fclose(socket_fp_wiki);
 	close(fd_wiki);
 
@@ -103,7 +111,7 @@ int parser(char *string, char *key, char *stringr) {
 		strcpy((tempr+pmatch.rm_so), (tempr+pmatch.rm_eo));
 	}
 	snprintf(stringr, 4096, "%s", tempr);
-	snprintf(tempr, 4096, " More: http://pt.wikipedia.org/w/index.php?title=%s&redirect=yes", key);
+	snprintf(tempr, 4096, " More: http://en.wikipedia.org/w/index.php?title=%s&redirect=yes", key);
 	strcat(stringr, tempr);
 	printf("%s\n", stringr);
 
